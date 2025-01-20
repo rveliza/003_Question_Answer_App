@@ -28,12 +28,26 @@ def register():
         db.commit()
         return "User Created!"
 
-        return f"Password: {hashed_password}"
     return render_template('register.html')
 
 
-@app.route('/login')
+@app.route('/login', methods=["GET", "POST"])
 def login():
+    if request.method == "POST":
+        db = get_db()
+
+        name = request.form['name']
+        password = request.form['password']
+
+        user_cur = db.execute("SELECT password FROM users WHERE name = ?", [name])
+        user_result = user_cur.fetchone()
+
+        same_password = check_password_hash(user_result['password'], password)
+        if same_password:
+            return "Password correct"
+        else:
+            return "Password incorrect"
+    
     return render_template('login.html')
 
 
