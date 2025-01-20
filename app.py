@@ -11,10 +11,23 @@ def close_db(error):
     if hasattr(g, 'sqlite_db'):
         g.sqlite_db.close()
 
+def get_current_user():
+    user_result = None
+
+    if 'user' in session:
+        user = session['user']
+
+        db = get_db()
+        user_cur = db.execute('SELECT * FROM users WHERE name = ?', [user])
+        user_result = user_cur.fetchone()
+
+    return user_result
+
 
 @app.route('/')
 def index():
-    user = None
+    user = get_current_user()
+    print(f"user: {user}")
     if 'user' in session:
         user = session['user']
 
@@ -23,6 +36,7 @@ def index():
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
+    user = get_current_user()
     if request.method == "POST":
         db = get_db()
 
@@ -39,6 +53,7 @@ def register():
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
+    user = get_current_user()
     if request.method == "POST":
         db = get_db()
 
@@ -61,26 +76,31 @@ def login():
 
 @app.route('/question')
 def question():
+    user = get_current_user()
     return render_template('question.html')
 
 
 @app.route('/answer')
 def answer():
+    user = get_current_user()
     return render_template('answer.html')
 
 
 @app.route('/ask')
 def ask():
+    user = get_current_user()
     return render_template('ask.html')
 
 
 @app.route('/unanswered')
 def unanswered():
+    user = get_current_user()
     return render_template('unanswered.html')
 
 
 @app.route('/users')
 def users():
+    user = get_current_user()
     return render_template('users.html')
 
 
