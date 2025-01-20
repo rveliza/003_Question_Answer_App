@@ -1,9 +1,11 @@
-from flask import Flask, render_template, g, request
+from flask import Flask, render_template, g, request, session, redirect, url_for
 from database import get_db
 from werkzeug.security import generate_password_hash, check_password_hash
+import os
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
+app.config['SECRET_KEY'] = os.urandom(24)
 
 def close_db(error):
     if hasattr(g, 'sqlite_db'):
@@ -12,7 +14,11 @@ def close_db(error):
 
 @app.route('/')
 def index():
-    return render_template('home.html')
+    user = None
+    if 'user' in session:
+        user = session['user']
+
+    return render_template('home.html', user=user)
 
 
 @app.route('/register', methods=["GET", "POST"])
@@ -39,11 +45,13 @@ def login():
         name = request.form['name']
         password = request.form['password']
 
-        user_cur = db.execute("SELECT password FROM users WHERE name = ?", [name])
+        user_cur = db.execute("SELECT name, password FROM users WHERE name = ?", [name])
         user_result = user_cur.fetchone()
 
         same_password = check_password_hash(user_result['password'], password)
         if same_password:
+            session['user'] = user_result['name'] 
+            #Session: <SecureCookieSession {'user': 'admin'}>
             return "Password correct"
         else:
             return "Password incorrect"
@@ -74,6 +82,12 @@ def unanswered():
 @app.route('/users')
 def users():
     return render_template('users.html')
+
+
+@app.route('/logout')
+def logout():
+    session.pop('user', None)
+    return redirect(url_for('index'))
 
 if __name__ == "__main__":
     app.run()
