@@ -42,7 +42,9 @@ def register():
 
         db.execute("INSERT INTO users (name, password, expert, admin) VALUES (?,?,?,?)", [name, hashed_password, 0, 0])
         db.commit()
-        return "User Created!"
+
+        session['user'] = name
+        return redirect(url_for('index'))
 
     return render_template('register.html', user=user)
 
@@ -63,7 +65,7 @@ def login():
         if same_password:
             session['user'] = user_result['name'] 
             #Session: <SecureCookieSession {'user': 'admin'}>
-            return "Password correct"
+            return redirect(url_for('index'))
         else:
             return "Password incorrect"
     
