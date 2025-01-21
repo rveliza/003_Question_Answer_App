@@ -99,13 +99,28 @@ def unanswered():
 @app.route('/users')
 def users():
     user = get_current_user()
-    return render_template('users.html', user=user)
+
+    db = get_db()
+    users_cur = db.execute("SELECT id, name, expert, admin FROM users")
+    users_results = users_cur.fetchall()
+    
+    return render_template('users.html', user=user, users=users_results)
+
+
+@app.route('/promote/<user_id>')
+def promote(user_id):
+
+    db = get_db()
+    db.execute("UPDATE users SET expert = 1 WHERE id = ?", [user_id])
+    db.commit()
+    return redirect(url_for('users'))
 
 
 @app.route('/logout')
 def logout():
     session.pop('user', None)
     return redirect(url_for('index'))
+    
 
 if __name__ == "__main__":
     app.run()
